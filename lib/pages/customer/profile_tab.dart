@@ -3,18 +3,15 @@ import 'package:provider/provider.dart';
 
 import '../../state/app_state.dart';
 import '../../widgets/common_widgets.dart';
-import '../help_center_page.dart';
 import '../login_page.dart';
 import '../notifications_page.dart';
-import '../privacy_policy_page.dart';
 import 'block_users_page.dart';
 
 // =======================================================================
 // HOME_ASIS - Tab Profil (Pelanggan)
 // -----------------------------------------------------------------------
-// Kumpulan menu terkait akun: Notifikasi (SRS 4.8), Metode Pembayaran
-// (SRS 4.6), Blokir Pengguna (SAFE-4), Pusat Bantuan & Kebijakan Privasi
-// (SRS 2.6), dan Keluar Akun.
+// Kumpulan menu akun: Notifikasi, Metode Pembayaran,
+// Blokir Pengguna, dan Keluar Akun.
 // =======================================================================
 class CustomerProfileTab extends StatelessWidget {
   const CustomerProfileTab({super.key});
@@ -75,24 +72,6 @@ class CustomerProfileTab extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const BlockUsersPage())),
           ),
-          _MenuTile(
-            icon: Icons.language_rounded,
-            label: 'Bahasa',
-            trailingText: 'Indonesia',
-            onTap: () => _tampilkanPilihanBahasa(context),
-          ),
-          _MenuTile(
-            icon: Icons.help_outline_rounded,
-            label: 'Pusat Bantuan & FAQ',
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const HelpCenterPage())),
-          ),
-          _MenuTile(
-            icon: Icons.privacy_tip_outlined,
-            label: 'Kebijakan Privasi',
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PrivacyPolicyPage())),
-          ),
           const SizedBox(height: 8),
           _MenuTile(
             icon: Icons.logout_rounded,
@@ -134,40 +113,16 @@ class CustomerProfileTab extends StatelessWidget {
       ),
     );
   }
-
-  void _tampilkanPilihanBahasa(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => SimpleDialog(
-        title: const Text('Pilih Bahasa'),
-        children: [
-          SimpleDialogOption(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('🇮🇩 Bahasa Indonesia (aktif)')),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.of(context).pop();
-              showAppSnackBar(context,
-                  'English language pack belum tersedia pada versi ini.');
-            },
-            child: const Text('🇬🇧 English'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? trailingText;
   final bool danger;
   final VoidCallback onTap;
   const _MenuTile(
       {required this.icon,
       required this.label,
-      this.trailingText,
       this.danger = false,
       required this.onTap});
 
@@ -185,10 +140,7 @@ class _MenuTile extends StatelessWidget {
           title: Text(label,
               style: TextStyle(
                   color: warna, fontWeight: FontWeight.w600, fontSize: 13.5)),
-          trailing: trailingText != null
-              ? Text(trailingText!,
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12))
-              : const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+          trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
         ),
       ),
     );

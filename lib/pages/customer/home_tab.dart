@@ -212,7 +212,7 @@ class _SeksiKategori extends StatelessWidget {
       children: [
         const SectionTitle(title: 'Kategori Jasa'),
         SizedBox(
-          height: 90,
+          height: 110,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -249,20 +249,21 @@ class _ChipKategori extends StatelessWidget {
       child: SizedBox(
         width: 72,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.1),
+                  color: scheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16)),
               child: Icon(kategori.icon, color: scheme.primary),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               kategori.name,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 10.5),
             ),

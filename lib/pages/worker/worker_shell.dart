@@ -43,19 +43,19 @@ class _WorkerShellState extends State<WorkerShell> {
           destinations: const [
             NavigationDestination(
                 icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
+                selectedIcon: Icon(Icons.home_rounded),
                 label: 'Beranda'),
             NavigationDestination(
                 icon: Icon(Icons.assignment_outlined),
-                selectedIcon: Icon(Icons.assignment),
+                selectedIcon: Icon(Icons.assignment_rounded),
                 label: 'Pesanan'),
             NavigationDestination(
-                icon: Icon(Icons.history_rounded),
+                icon: Icon(Icons.history_outlined),
                 selectedIcon: Icon(Icons.history_rounded),
                 label: 'Riwayat'),
             NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
                 label: 'Profil'),
           ],
         ),

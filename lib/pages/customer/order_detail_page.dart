@@ -11,10 +11,9 @@ import 'rating_review_page.dart';
 // HOME_ASIS - Detail & Pelacakan Pesanan
 // -----------------------------------------------------------------------
 // SAFE-1: kontak pekerja/pelanggan disembunyikan sebelum pesanan
-// dikonfirmasi. SAFE-2: tombol "Laporan Darurat" wajib terlihat jelas di
-// halaman detail pesanan aktif. BIZ-4.2/BR-3: aturan pembatalan berbeda
-// tergantung status pesanan. BIZ-6.2: pelanggan mengonfirmasi selesai
-// setelah mitra mengklaim pekerjaan rampung.
+// dikonfirmasi. BIZ-4.2/BR-3: aturan pembatalan berbeda tergantung status
+// pesanan. BIZ-6.2: pelanggan mengonfirmasi selesai setelah mitra mengklaim
+// pekerjaan rampung.
 // =======================================================================
 class OrderDetailPage extends StatelessWidget {
   final String bookingId;
@@ -26,31 +25,6 @@ class OrderDetailPage extends StatelessWidget {
     BookingStatus.ongoing,
     BookingStatus.completed,
   ];
-
-  Future<void> _laporanDarurat(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        icon: const Icon(Icons.emergency_share_rounded,
-            color: Colors.red, size: 40),
-        title: const Text('Laporan Darurat'),
-        content: const Text(
-          'Tim keamanan Home_Asis akan segera dihubungi (SAFE-2). '
-          'Ini merupakan simulasi tampilan -- tidak ada panggilan sungguhan yang dikirim.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          Center(
-            child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Mengerti'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _batalkanPesanan(BuildContext context, Booking booking) async {
     final adaBiaya = booking.status == BookingStatus.accepted;
@@ -197,7 +171,7 @@ class OrderDetailPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withOpacity(0.1),
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14)),
                 child: Column(
                   children: [
@@ -237,36 +211,26 @@ class OrderDetailPage extends StatelessWidget {
             ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _laporanDarurat(context),
-                  icon: const Icon(Icons.emergency_share_rounded,
-                      color: Colors.red),
-                  label: const Text('Laporan Darurat',
-                      style: TextStyle(color: Colors.red)),
-                  style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red)),
-                ),
-              ),
-              if (booking.status == BookingStatus.pending ||
-                  booking.status == BookingStatus.accepted) ...[
-                const SizedBox(width: 10),
-                Expanded(
+      bottomNavigationBar: (booking.status == BookingStatus.pending ||
+              booking.status == BookingStatus.accepted)
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => _batalkanPesanan(context, booking),
-                    child: const Text('Batalkan'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Batalkan Pesanan'),
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
-      ),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -274,58 +238,117 @@ class OrderDetailPage extends StatelessWidget {
 class _StatusStepper extends StatelessWidget {
   final BookingStatus status;
   final List<BookingStatus> tahapan;
+
   const _StatusStepper({required this.status, required this.tahapan});
 
   @override
   Widget build(BuildContext context) {
-    final indexSekarang = tahapan.indexOf(status);
+    final scheme = Theme.of(context).colorScheme;
+    final activeIndex = tahapan.indexOf(status);
+    final isCancelled = status == BookingStatus.cancelled;
+
+    if (isCancelled) return const SizedBox.shrink();
+
+    const dotSize = 16.0;
+    const inactiveColor = Color(0xFFE2E8F0);
+
     return SoftCard(
-      child: Row(
-        children: List.generate(tahapan.length, (i) {
-          final selesai = i <= indexSekarang;
-          return Expanded(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    if (i > 0)
-                      Expanded(
-                          child: Divider(
-                              color: selesai
-                                  ? tahapan[i].color
-                                  : Colors.grey.shade300,
-                              thickness: 2)),
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            selesai ? tahapan[i].color : Colors.grey.shade300,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Column(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stepWidth = constraints.maxWidth / tahapan.length;
+              final lineY = dotSize / 2;
+
+              return Stack(
+                children: [
+                  Positioned(
+                    top: lineY - 1,
+                    left: stepWidth / 2,
+                    right: stepWidth / 2,
+                    child: Container(
+                      height: 2,
+                      color: inactiveColor,
+                    ),
+                  ),
+                  if (activeIndex > 0)
+                    Positioned(
+                      top: lineY - 1,
+                      left: stepWidth / 2,
+                      width: stepWidth *
+                          (activeIndex.clamp(0, tahapan.length - 1)),
+                      child: Container(
+                        height: 2,
+                        color: scheme.primary,
                       ),
                     ),
-                    if (i < tahapan.length - 1)
-                      Expanded(
-                          child: Divider(
-                              color: i < indexSekarang
-                                  ? tahapan[i].color
-                                  : Colors.grey.shade300,
-                              thickness: 2)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  tahapan[i].label,
+                  Row(
+                    children: List.generate(tahapan.length, (index) {
+                      final isCompleted = index < activeIndex;
+                      final isCurrent = index == activeIndex;
+
+                      return Expanded(
+                        child: Center(
+                          child: Container(
+                            width: dotSize,
+                            height: dotSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: (isCompleted || isCurrent)
+                                  ? scheme.primary
+                                  : inactiveColor,
+                              border: isCurrent
+                                  ? Border.all(
+                                      color:
+                                          scheme.primary.withValues(alpha: 0.3),
+                                      width: 4,
+                                    )
+                                  : null,
+                            ),
+                            child: isCompleted
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 10,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(tahapan.length, (index) {
+              final isCurrent = index == activeIndex;
+              final isPassed = index <= activeIndex;
+
+              return Expanded(
+                child: Text(
+                  tahapan[index].label,
                   textAlign: TextAlign.center,
+                  maxLines: 2,
                   style: TextStyle(
-                      fontSize: 9.5,
-                      color: selesai ? Colors.black87 : Colors.grey,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 10.5,
+                    fontWeight:
+                        isCurrent ? FontWeight.bold : FontWeight.normal,
+                    color: isCurrent
+                        ? scheme.primary
+                        : (isPassed
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFF94A3B8)),
+                  ),
                 ),
-              ],
-            ),
-          );
-        }),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }

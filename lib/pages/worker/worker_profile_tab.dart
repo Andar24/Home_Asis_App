@@ -5,17 +5,15 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
-import '../help_center_page.dart';
 import '../login_page.dart';
 import '../notifications_page.dart';
-import '../privacy_policy_page.dart';
 import 'ktp_verification_page.dart';
 
 // =======================================================================
 // HOME_ASIS - Tab Profil (Mitra Pekerja)
 // -----------------------------------------------------------------------
 // Menampilkan profil, kategori keahlian, tarif per jam, status verifikasi
-// KTP (SRS 4.2), dan menu akun umum lainnya.
+// KTP, dan menu akun umum lainnya.
 // =======================================================================
 class WorkerProfileTab extends StatelessWidget {
   const WorkerProfileTab({super.key});
@@ -99,18 +97,6 @@ class WorkerProfileTab extends StatelessWidget {
             label: 'Notifikasi',
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const NotificationsPage())),
-          ),
-          _MenuTile(
-            icon: Icons.help_outline_rounded,
-            label: 'Pusat Bantuan & FAQ',
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const HelpCenterPage())),
-          ),
-          _MenuTile(
-            icon: Icons.privacy_tip_outlined,
-            label: 'Kebijakan Privasi',
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PrivacyPolicyPage())),
           ),
           const SizedBox(height: 8),
           _MenuTile(

@@ -2,17 +2,60 @@ import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 
-// =======================================================================
-// HOME_ASIS - Data Dummy (Mock Data)
-// -----------------------------------------------------------------------
-// Menyediakan data awal (seed) untuk AppState. Sesuai ketentuan tugas,
-// seluruh data bersifat statis/dummy -- tidak ada koneksi ke backend,
-// PostgreSQL, Google Maps API, Midtrans, maupun Firebase sungguhan.
-// =======================================================================
+class AppAccount {
+  final String username;
+  final String password;
+  final UserRole role;
+  final String name;
+  final String? workerId;
+
+  const AppAccount({
+    required this.username,
+    required this.password,
+    required this.role,
+    required this.name,
+    this.workerId,
+  });
+}
+
 class MockData {
   MockData._();
 
-  /// Sembilan kategori layanan utama (SRS 1.4).
+  static List<AppAccount> dummyAccounts() => const [
+        AppAccount(
+          username: 'user',
+          password: '123456',
+          role: UserRole.customer,
+          name: 'Rani Permatasari',
+        ),
+        AppAccount(
+          username: 'pelanggan',
+          password: '123456',
+          role: UserRole.customer,
+          name: 'Rani Permatasari',
+        ),
+        AppAccount(
+          username: 'pekerja',
+          password: '123456',
+          role: UserRole.worker,
+          name: 'Budi Santoso',
+          workerId: 'W1',
+        ),
+        AppAccount(
+          username: 'mitra_budi',
+          password: '123456',
+          role: UserRole.worker,
+          name: 'Budi Santoso',
+          workerId: 'W1',
+        ),
+        AppAccount(
+          username: 'admin',
+          password: '123456',
+          role: UserRole.admin,
+          name: 'Admin Home_Asis',
+        ),
+      ];
+
   static List<ServiceCategory> categories() => [
         ServiceCategory(
             id: 'listrik',
@@ -52,6 +95,7 @@ class MockData {
         WorkerProfile(
           id: 'W1',
           name: 'Budi Santoso',
+          username: 'pekerja',
           initials: 'BS',
           avatarColor: const Color(0xFF00796B),
           categoryId: 'listrik',
@@ -68,6 +112,7 @@ class MockData {
         WorkerProfile(
           id: 'W2',
           name: 'Siti Rahma',
+          username: 'siti_rahma',
           initials: 'SR',
           avatarColor: const Color(0xFFEF6C00),
           categoryId: 'cleaning',
@@ -84,6 +129,7 @@ class MockData {
         WorkerProfile(
           id: 'W3',
           name: 'Agus Wijaya',
+          username: 'agus_wijaya',
           initials: 'AW',
           avatarColor: const Color(0xFF5E35B1),
           categoryId: 'ledeng',
@@ -99,6 +145,7 @@ class MockData {
         WorkerProfile(
           id: 'W4',
           name: 'Dewi Puspita',
+          username: 'dewi_p',
           initials: 'DP',
           avatarColor: const Color(0xFFC2185B),
           categoryId: 'elektronik',
@@ -115,6 +162,7 @@ class MockData {
         WorkerProfile(
           id: 'W5',
           name: 'Rahmat Hidayat',
+          username: 'rahmat_h',
           initials: 'RH',
           avatarColor: const Color(0xFF3949AB),
           categoryId: 'kebun',
@@ -130,6 +178,7 @@ class MockData {
         WorkerProfile(
           id: 'W6',
           name: 'Ningsih Lestari',
+          username: 'ningsih_l',
           initials: 'NL',
           avatarColor: const Color(0xFF00838F),
           categoryId: 'babysitter',
@@ -146,6 +195,7 @@ class MockData {
         WorkerProfile(
           id: 'W7',
           name: 'Joko Prasetyo',
+          username: 'joko_p',
           initials: 'JP',
           avatarColor: const Color(0xFF6D4C41),
           categoryId: 'rumah',
@@ -164,6 +214,7 @@ class MockData {
         WorkerProfile(
           id: 'W8',
           name: 'Yuli Andriani',
+          username: 'yuli_a',
           initials: 'YA',
           avatarColor: const Color(0xFFAD1457),
           categoryId: 'laundry',
@@ -179,6 +230,7 @@ class MockData {
         WorkerProfile(
           id: 'W9',
           name: 'Sari Wulandari',
+          username: 'sari_w',
           initials: 'SW',
           avatarColor: const Color(0xFF558B2F),
           categoryId: 'art',
@@ -200,21 +252,25 @@ class MockData {
         CustomerAccount(
             id: 'C1',
             name: 'Rani Permatasari',
+            username: 'user',
             email: 'rani@email.com',
             phone: '0812-1111-2222'),
         CustomerAccount(
             id: 'C2',
             name: 'Andra Saputra',
+            username: 'andra_s',
             email: 'andra@email.com',
             phone: '0813-3333-4444'),
         CustomerAccount(
             id: 'C3',
             name: 'Melati Kusuma',
+            username: 'melati_k',
             email: 'melati@email.com',
             phone: '0821-5555-6666'),
         CustomerAccount(
             id: 'C4',
             name: 'Fajar Nugraha',
+            username: 'fajar_n',
             email: 'fajar@email.com',
             phone: '0857-7777-8888',
             isBlocked: true),
@@ -329,7 +385,6 @@ class MockData {
     ];
   }
 
-  /// Kata yang difilter otomatis dari ulasan (REQ-7.2, disederhanakan).
   static const List<String> kataTerlarang = [
     'anjing',
     'bangsat',

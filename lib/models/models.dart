@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 // -----------------------------------------------------------------------
 // Seluruh kelas di file ini merepresentasikan entitas utama pada SRS
 // Home_Asis (Lampiran C - Database Design): Users/Workers, Categories,
-// Bookings, Payments, Reviews. Karena aplikasi ini adalah prototipe UI
-// tanpa backend sungguhan, entitas disederhanakan menjadi model Dart biasa
-// yang disimpan di memori (lihat lib/state/app_state.dart).
+// Bookings, Payments, Reviews.
 // =======================================================================
 
 /// Tiga kelas pengguna sesuai SRS bab 2.3.
@@ -142,6 +140,7 @@ class ServiceCategory {
 class WorkerProfile {
   final String id;
   final String name;
+  final String username;
   final String initials;
   final Color avatarColor;
   final String categoryId;
@@ -151,7 +150,7 @@ class WorkerProfile {
   double rating;
   int reviewCount;
   final double distanceKm;
-  final int pricePerHour; // dalam ribuan rupiah
+  final int pricePerHour;
   VerificationStatus verificationStatus;
   bool isAvailable;
   bool isBlocked;
@@ -166,6 +165,7 @@ class WorkerProfile {
   WorkerProfile({
     required this.id,
     required this.name,
+    this.username = 'pekerja',
     required this.initials,
     required this.avatarColor,
     required this.categoryId,
@@ -188,19 +188,18 @@ class WorkerProfile {
     this.jamIstirahatSelesai = '13.00',
   });
 
-  /// Skor gabungan jarak (40%) & rating (60%) sesuai REQ-3.2.
   double get skorRekomendasi {
-    final skorJarak =
-        (30 - distanceKm.clamp(0, 30)) / 30; // makin dekat makin tinggi
+    final skorJarak = (30 - distanceKm.clamp(0, 30)) / 30;
     final skorRating = rating / 5.0;
     return (skorJarak * 0.4) + (skorRating * 0.6);
   }
 }
 
-/// Akun pelanggan dummy untuk kebutuhan manajemen pengguna Admin (REQ-10.1).
+/// Akun pelanggan dummy untuk kebutuhan manajemen pengguna Admin.
 class CustomerAccount {
   final String id;
   final String name;
+  final String username;
   final String email;
   final String phone;
   bool isBlocked;
@@ -208,6 +207,7 @@ class CustomerAccount {
   CustomerAccount({
     required this.id,
     required this.name,
+    required this.username,
     required this.email,
     required this.phone,
     this.isBlocked = false,
@@ -231,7 +231,7 @@ class ReviewItem {
   });
 }
 
-/// Pesanan / Booking (SRS 4.4 & 4.5, tabel Bookings + Payments).
+/// Pesanan / Booking.
 class Booking {
   final String id;
   final String workerId;
@@ -241,8 +241,8 @@ class Booking {
   DateTime scheduledDate;
   TimeOfDay scheduledTime;
   BookingStatus status;
-  final int serviceFee; // ribuan rupiah
-  final int adminFee; // ribuan rupiah
+  final int serviceFee;
+  final int adminFee;
   String note;
   bool isPaid;
   String? paymentMethod;
@@ -274,7 +274,7 @@ class Booking {
   int get totalFee => serviceFee + adminFee;
 }
 
-/// Notifikasi push (SRS 4.8, disimulasikan secara lokal tanpa FCM).
+/// Notifikasi push.
 class AppNotification {
   final String id;
   final String title;

@@ -7,20 +7,7 @@ import '../../widgets/common_widgets.dart';
 import '../admin/admin_dashboard_page.dart';
 import '../customer/customer_shell.dart';
 import '../worker/worker_shell.dart';
-import 'otp_page.dart';
 
-// =======================================================================
-// HOME_ASIS - Halaman Pendaftaran (Register)
-// -----------------------------------------------------------------------
-// REQ-1 (High): "Sistem harus menyediakan antarmuka pendaftaran untuk tiga
-// peran berbeda (Pelanggan, Pekerja, Admin internal)". Admin tidak
-// disediakan formulir publik karena bersifat internal (SRS 2.3), sehingga
-// halaman ini hanya menyediakan opsi Pelanggan & Mitra Pekerja.
-//
-// UI-1.2: "Formulir pendaftaran untuk pekerja harus mencakup pilihan
-// kategori keahlian dari sembilan kategori yang tersedia."
-// VAL-1.1 s.d. VAL-1.3: validasi format email, kata sandi, dan telepon.
-// =======================================================================
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -31,7 +18,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
-  final _identitasController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _konfirmasiController = TextEditingController();
   final _tarifController = TextEditingController(text: '35');
@@ -44,7 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _namaController.dispose();
-    _identitasController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     _konfirmasiController.dispose();
     _tarifController.dispose();
@@ -54,20 +41,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _daftar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final berhasilOtp = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => OtpPage(
-            role: _peran, tujuanKontak: _identitasController.text.trim()),
-      ),
-    );
-    if (berhasilOtp != true || !mounted) return;
-
     final appState = context.read<AppState>();
     Widget tujuan;
+
     if (_peran == UserRole.worker) {
       final worker = appState.registerWorker(
         name: _namaController.text.trim(),
-        phone: _identitasController.text.trim(),
+        username: _usernameController.text.trim(),
         categoryId: _kategoriId,
         tarifPerJam: int.tryParse(_tarifController.text.trim()) ?? 35,
       );
@@ -82,6 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (!mounted) return;
+
     showAppSnackBar(context,
         'Pendaftaran berhasil! Selamat datang, ${_namaController.text.trim()}.');
     Navigator.of(context).pushAndRemoveUntil(
@@ -91,7 +72,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: simpleAppBar('Buat Akun Baru'),
@@ -142,13 +122,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
-                  controller: _identitasController,
+                  controller: _usernameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nomor Telepon / Email',
-                    hintText: 'contoh: 0812xxxxxxx atau nama@email.com',
-                    prefixIcon: Icon(Icons.alternate_email_rounded),
+                    labelText: 'Username',
+                    hintText: 'contoh: user_baru atau budi123',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
-                  validator: _validasiIdentitas, // VAL-1.1 & VAL-1.3
+                  validator: _validasiUsername,
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -167,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         'Minimal 8 karakter, kombinasi huruf besar/kecil & angka',
                     helperMaxLines: 2,
                   ),
-                  validator: _validasiPassword, // VAL-1.2
+                  validator: _validasiPassword,
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -190,7 +170,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (_peran == UserRole.worker) ...[
                   const SizedBox(height: 20),
                   const Text(
-                    'Kategori Keahlian', // UI-1.2
+                    'Kategori Keahlian',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
@@ -217,32 +197,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         ? 'Masukkan angka tarif yang valid'
                         : null,
                   ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline_rounded,
-                            size: 18, color: scheme.primary),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Setelah mendaftar, akun Anda perlu Verifikasi KTP (SRS 4.2) '
-                            'sebelum dapat muncul di pencarian pelanggan.',
-                            style: TextStyle(
-                                fontSize: 11.5, color: scheme.primary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
                 const SizedBox(height: 26),
-                PrimaryButton(label: 'Daftar & Kirim OTP', onPressed: _daftar),
+                PrimaryButton(label: 'Daftar Sekarang', onPressed: _daftar),
                 const SizedBox(height: 12),
                 Center(
                   child: TextButton(
@@ -258,23 +215,20 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  String? _validasiIdentitas(String? v) {
+  String? _validasiUsername(String? v) {
     if (v == null || v.trim().isEmpty) {
-      return 'Nomor telepon atau email wajib diisi';
+      return 'Username wajib diisi';
     }
     final value = v.trim();
-    final emailRegex =
-        RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$'); // VAL-1.1 (disederhanakan)
-    final teleponRegex = RegExp(r'^(08|\+62)\d{8,11}$'); // VAL-1.3
-    if (!emailRegex.hasMatch(value) && !teleponRegex.hasMatch(value)) {
-      return 'Format harus email valid atau telepon (08xx / +62xx)';
+    if (value.length < 4) {
+      return 'Username minimal 4 karakter';
     }
     return null;
   }
 
   String? _validasiPassword(String? v) {
     if (v == null || v.length < 8) {
-      return 'Kata sandi minimal 8 karakter'; // VAL-1.2
+      return 'Kata sandi minimal 8 karakter';
     }
     final adaBesar = v.contains(RegExp(r'[A-Z]'));
     final adaKecil = v.contains(RegExp(r'[a-z]'));
@@ -307,7 +261,7 @@ class _KartuPilihanPeran extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: aktif ? scheme.primary.withOpacity(0.1) : Colors.white,
+          color: aktif ? scheme.primary.withValues(alpha: 0.1) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
               color: aktif ? scheme.primary : Colors.grey.shade300,
