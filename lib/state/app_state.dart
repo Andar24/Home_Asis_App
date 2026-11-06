@@ -7,14 +7,7 @@ import '../models/models.dart';
 // HOME_ASIS - AppState (Sumber Kebenaran Data Dummy)
 // -----------------------------------------------------------------------
 // Kelas ini berperan sebagai pengganti sederhana dari "Backend Server"
-// pada SRS (lihat Gambar 2.1 Diagram Blok Arsitektur). Karena tugas ini
-// berupa prototipe UI, seluruh state (pengguna aktif, daftar pesanan,
-// notifikasi, dsb.) disimpan di memori memakai ChangeNotifier dari
-// package provider, BUKAN memakai REST API/PostgreSQL/JWT sungguhan.
-//
-// Setiap method publik di bawah ini merepresentasikan satu use case dari
-// Bab 4 SRS (ditandai dengan komentar REQ/BIZ/SAFE terkait) sehingga
-// mudah ditelusuri (traceability) ke dokumen SRS.
+// pada SRS (lihat Gambar 2.1 Diagram Blok Arsitektur).
 // =======================================================================
 class AppState extends ChangeNotifier {
   AppState() {
@@ -28,7 +21,7 @@ class AppState extends ChangeNotifier {
   // ------------------------- Sesi Pengguna Aktif -------------------------
   UserRole? currentRole;
   String currentUserName = 'Pengguna';
-  String currentWorkerId = 'W1'; // worker "aku" saat login sebagai pekerja
+  String currentWorkerId = 'W1';
 
   bool get isLoggedIn => currentRole != null;
 
@@ -40,6 +33,54 @@ class AppState extends ChangeNotifier {
   late List<CustomerAccount> customerAccounts;
 
   // ------------------------------- REQ-1 -----------------------------------
+  bool loginWithUsernamePassword(String username, String password) {
+    final cleanUser = username.trim().toLowerCase();
+    final cleanPass = password.trim();
+
+    final match = MockData.dummyAccounts().firstWhere(
+      (acc) =>
+          acc.username.toLowerCase() == cleanUser &&
+          acc.password == cleanPass,
+      orElse: () => const AppAccount(
+        username: '',
+        password: '',
+        role: UserRole.customer,
+        name: '',
+      ),
+    );
+
+    if (match.username.isEmpty) {
+      return false;
+    }
+
+    login(match.role, name: match.name, workerId: match.workerId);
+    return true;
+  }
+
+  bool authenticateAndLogin({
+    required String username,
+    required String password,
+    required UserRole role,
+  }) {
+    final cleanUsername = username.trim().toLowerCase();
+
+    final match = MockData.dummyAccounts().firstWhere(
+      (acc) =>
+          acc.username.toLowerCase() == cleanUsername &&
+          acc.password == password &&
+          acc.role == role,
+      orElse: () => AppAccount(
+        username: cleanUsername,
+        password: password,
+        role: role,
+        name: username.trim().isNotEmpty ? username.trim() : 'Pengguna',
+      ),
+    );
+
+    login(role, name: match.name, workerId: match.workerId);
+    return true;
+  }
+
   void login(UserRole role, {String? name, String? workerId}) {
     currentRole = role;
     currentUserName =
@@ -65,7 +106,7 @@ class AppState extends ChangeNotifier {
   /// REQ-1.2 / UI-1.2: registrasi pekerja baru dengan kategori keahlian.
   WorkerProfile registerWorker({
     required String name,
-    required String phone,
+    required String username,
     required String categoryId,
     required int tarifPerJam,
   }) {
@@ -83,11 +124,12 @@ class AppState extends ChangeNotifier {
     final worker = WorkerProfile(
       id: 'W${workers.length + 1}${DateTime.now().millisecondsSinceEpoch % 1000}',
       name: name,
+      username: username,
       initials: initials,
       avatarColor: Colors.primaries[workers.length % Colors.primaries.length],
       categoryId: kategori.id,
       categoryName: kategori.name,
-      phone: phone,
+      phone: '0812-0000-0000',
       bio: 'Mitra pekerja baru Home_Asis.',
       rating: 0,
       reviewCount: 0,
@@ -113,8 +155,6 @@ class AppState extends ChangeNotifier {
       findWorker(currentWorkerId) ?? workers.first;
 
   // ----------------------------- REQ-3: Pencarian ---------------------------
-  /// Daftar pekerja yang tampil di pencarian pelanggan: harus terverifikasi
-  /// (BIZ-2.1), tidak diblokir, dan bisa difilter berdasarkan kategori.
   List<WorkerProfile> searchableWorkers(
       {String? categoryId, String query = ''}) {
     final q = query.trim().toLowerCase();
@@ -131,7 +171,6 @@ class AppState extends ChangeNotifier {
   }
 
   // ----------------------------- REQ-4: Pemesanan ---------------------------
-  /// Mengecek slot waktu bentrok (REQ-5.1: mencegah double-booking).
   bool isSlotBentrok(String workerId, DateTime date, TimeOfDay time) {
     return bookings.any((b) =>
         b.workerId == workerId &&
@@ -163,8 +202,7 @@ class AppState extends ChangeNotifier {
       adminFee: adminFee,
       note: note,
       createdAt: DateTime.now(),
-      respondDeadline:
-          DateTime.now().add(const Duration(minutes: 30)), // BIZ-4.1
+      respondDeadline: DateTime.now().add(const Duration(minutes: 30)),
     );
     bookings.insert(0, booking);
     _tambahNotifikasi(
@@ -192,7 +230,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  /// BIZ-4.1: pekerja menerima/menolak pesanan dalam 30 menit.
   void respondBooking(String bookingId, bool accept) {
     final b = findBooking(bookingId);
     if (b == null) return;
@@ -208,7 +245,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// BIZ-4.2 / BR-3: pembatalan oleh pelanggan.
   void cancelBooking(String bookingId) {
     final b = findBooking(bookingId);
     if (b == null) return;
@@ -222,7 +258,7 @@ class AppState extends ChangeNotifier {
     if (b == null) return;
     b.isPaid = true;
     b.paymentMethod = method;
-    b.status = BookingStatus.ongoing; // dana ditahan (escrow) - REQ-6.2
+    b.status = BookingStatus.ongoing;
     _tambahNotifikasi(
       title: 'Pembayaran Berhasil',
       body: 'Dana ditahan sistem (escrow) hingga layanan selesai.',
@@ -238,7 +274,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Pekerja mengklaim pekerjaan selesai (memicu konfirmasi pelanggan).
   void workerClaimDone(String bookingId) {
     final b = findBooking(bookingId);
     if (b == null) return;
@@ -267,7 +302,7 @@ class AppState extends ChangeNotifier {
 
   void submitReview(String bookingId, int rating, String text) {
     final b = findBooking(bookingId);
-    if (b == null || b.review != null) return; // BIZ-7.1: tidak bisa diubah
+    if (b == null || b.review != null) return;
     b.review = ReviewItem(
         bookingId: bookingId,
         rating: rating,
@@ -325,8 +360,7 @@ class AppState extends ChangeNotifier {
     w.nik = nik;
     w.ktpNamaOcr = namaOcr;
     w.ocrConfidence = confidence;
-    w.verificationStatus =
-        VerificationStatus.pending; // BIZ-2.2: diproses maks 1x24 jam
+    w.verificationStatus = VerificationStatus.pending;
     notifyListeners();
   }
 
